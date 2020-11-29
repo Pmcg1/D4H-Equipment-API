@@ -3,3 +3,6 @@
 
 # Ignore config file
 config.py
+
+# Ignore outputs
+outputs/
