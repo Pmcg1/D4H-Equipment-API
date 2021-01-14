@@ -1,7 +1,6 @@
 import requests
 import json
-#import os
-#import errno
+
 from pathlib import Path
 from flask import jsonify, make_response
 
@@ -16,15 +15,22 @@ def printtojson(filename, response):
         json.dump(response.json(), f, indent = 4)
 '''      
 
+# Function to dump JSON to a file
 def printtojson(filename, response):
-    #dir_path = Path("outputs")
+    # Create outputs directory if it doesn't already exist
     Path('outputs').mkdir(parents=True, exist_ok=True) 
-    filepath = ('/outputs/%s.json' %filename)
-    print("Output filepath: ", filepath)
-    #os.makedirs(os.path.dirname(filepath), exist_ok=True)
-    #pathlib.Path('/outputs').mkdir(parents=True, exist_ok=True) 
+
+
+    # Build filepath
+    filepath = ('outputs/%s.json' %filename)
+
+
+    # Dump json to the file
     with open (filepath, 'w') as f:
         json.dump(response.json(), f, indent = 4)
+
+
+
 
 from config import api_key
 
@@ -38,13 +44,38 @@ print("API Key: ", api_key)
 
 # Check access
 response = requests.get(url, headers={'Authorization': 'Bearer %s' % api_key})
-print("Response from connection check: ",response.status_code)
+print("response from connection check: ",response.status_code)
 
 # Extract equipment
-response = requests.get(url+"/equipment", headers={'Authorization': 'Bearer %s' % api_key})
-print("Equipment GET response: ",response.status_code)
-
+response = requests.get(url+"/equipment"+"?limit=3", headers={'Authorization': 'Bearer %s' % api_key})
+print("equipment GET response: ",response.status_code)
 
 # Print to file
 filename = "equipment"
+printtojson(filename, response)
+
+#json_data = json.loads(response.text)
+#print("JSON DATA= ",json_data['data'])
+
+#print("response= ", response["data]"].json)
+#parsed = json.loads(response["data"])
+#print(json.dumps(parsed, indent=4, sort_keys=True))
+
+# Extract inspection resources 
+# These are the types of item to inspect
+response = requests.get(url+"/inspections", headers={'Authorization': 'Bearer %s' % api_key})
+print("inspections GET response: ",response.status_code)
+
+# Print to file
+filename = "inspections"
+printtojson(filename, response)
+
+
+# Extract inspections within a resource 
+# These are the individual items to inspect (harnesses in this case)
+response = requests.get(url+"/inspections/694/items", headers={'Authorization': 'Bearer %s' % api_key})
+print("inspection-items GET response: ",response.status_code)
+
+# Print to file
+filename = "inspection-items"
 printtojson(filename, response)
