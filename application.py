@@ -1,9 +1,9 @@
 import requests
 import json
+import sys
 
 from pathlib import Path
 from flask import jsonify, make_response
-
 from config import api_key
 
 
@@ -19,13 +19,70 @@ def printtojson(filename, response):
     # Dump json to the file
     with open (filepath, 'w') as f:
         json.dump(response, f, indent = 4)
-        
+
+
 def dataExtract(target):
     print("Target: ",target)
     response = requests.get(target, headers={'Authorization': 'Bearer %s' % api_key})
+    
     print("Response: ", response.status_code)
     return response.json()
 
+
+def queryAPI(targetEnding):
+    inspectTarget = url+targetEnding
+    return dataExtract(inspectTarget)
+
+
+def introMenuFormat():
+    print("\nMain Menu")
+    print("---------")
+    print("1) View Available Inspection Classes")
+    print("2) Select an Inspection")
+    print("Q) Exit\n")
+
+
+def menu():
+    while True:
+        introMenuFormat()
+        choice = input("Your Choice: ").lower()
+
+        if choice == "1":
+            listInspectionClasses(inspectionsDict)
+            print("")
+
+        elif choice == "2":
+            inspChoice = input("\nInspection Class ID: ").lower()
+            targetEnding = "/inspections/"+str(inspChoice)+"/items"
+            
+            response = queryAPI(targetEnding)
+
+            print("Contents: ")
+            print(json.dumps(response['data'], indent=4))
+
+
+        elif choice == "q":
+            return
+
+        else:
+            print("Please try again")
+
+
+# Extract Inspections from D4H
+def extractInspectionClasses(): 
+    targetEnding = "/inspections"
+    response = queryAPI(targetEnding)
+    filename = "inspections"
+    printtojson(filename, response)
+    responseData = response['data']
+    # Create Dict of inspection classes
+    inspectionsDict = {}
+    i = 1
+    for item in responseData:
+        i = i+1
+        inspectionsDict[item["id"]] = (item["title"])
+
+    return inspectionsDict
 
 # Defining variables to access API
 base_url = "https://api.d4h.org/v2"
@@ -36,39 +93,38 @@ print("Connecting to: ", url)
 print("API Key: ", api_key)
 
 # Check access
+print("Welcome to the Inventory Inspector App")
+print("Checking Authorisation...")
 response = requests.get(url, headers={'Authorization': 'Bearer %s' % api_key})
 print("Response from connection check: ",response.status_code)
-
-def queryAPI(targetEnding):
-    inspectTarget = url+targetEnding
-    return dataExtract(inspectTarget)
-
-# Extract Inspections
-targetEnding = "/inspections"
-response = queryAPI(targetEnding)
-filename = "inspections"
-printtojson(filename, response)
+if (response.status_code == requests.codes.ok):
+    print("Good Response")
+else:
+    print("Not Authorised")
 
 
-responseData = response['data']
+inspectionsDict = extractInspectionClasses()
 
 
-inspectionsDict = {}
-#print("Data: ",response['data'])
+def listInspectionClasses(inspectionsDict):
+    print("List of inspection classes:")
+    for key in inspectionsDict.keys():
+        targetEnding = "/inspections/"+str(key)+"/items"
+        print("\nItem: ",key, ":", inspectionsDict[key], end =" ")
+
+
+#listInspectionClasses(inspectionsDict)
+
+'''
 print("List of inspection classes:")
-i = 1
-for item in responseData:
-    #inspectionTitle = item[2]
-    #print("Inspection class",i,":", item["title"])
-    i = i+1
-    #print(item["id"], ":", item["title"])
-    inspectionsDict[item["id"]] = (item["title"])
-
-
+# List contents of each inspection class
 for key in inspectionsDict.keys():
-    #for value in inspectionsDict[key]:
     targetEnding = "/inspections/"+str(key)+"/items"
     print("\nItem: ",key, ":", inspectionsDict[key])
     response = queryAPI(targetEnding)
     filename = "inspection-"+str(key)+"-"+str(inspectionsDict[key])
     printtojson(filename, response)
+'''
+
+if __name__ == '__main__':
+    menu()
