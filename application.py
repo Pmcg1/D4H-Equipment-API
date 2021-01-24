@@ -24,13 +24,16 @@ def printtojson(filename, response):
 def dataExtract(target):
     print("Target: ",target)
     response = requests.get(target, headers={'Authorization': 'Bearer %s' % api_key})
+
     
     print("Response: ", response.status_code)
     return response.json()
 
 
 def queryAPI(targetEnding):
+    print("\nQuerying API...\n")
     inspectTarget = url+targetEnding
+
     return dataExtract(inspectTarget)
 
 
@@ -48,17 +51,23 @@ def menu():
         choice = input("Your Choice: ").lower()
 
         if choice == "1":
+            inspectionsDict = extractInspectionClasses()
             listInspectionClasses(inspectionsDict)
             print("")
 
         elif choice == "2":
-            inspChoice = input("\nInspection Class ID: ").lower()
-            targetEnding = "/inspections/"+str(inspChoice)+"/items"
-            
-            response = queryAPI(targetEnding)
+            try:
+                inspChoice = input("\nInspection Class ID: ").lower()
+                #Return only inspections that have not been completed yet
+                targetEnding = "/inspections/"+str(inspChoice)+"/items?completed=false"
+                
+                response = queryAPI(targetEnding)
 
-            print("Contents: ")
-            print(json.dumps(response['data'], indent=4))
+                #print(response.status_code)
+                print("Contents: ")
+                print(json.dumps(response['data'], indent=4))
+            except:
+                return
 
 
         elif choice == "q":
@@ -84,6 +93,15 @@ def extractInspectionClasses():
 
     return inspectionsDict
 
+
+def listInspectionClasses(inspectionsDict):
+    print("List of inspection classes:")
+    for key in inspectionsDict.keys():
+        targetEnding = "/inspections/"+str(key)+"/items"
+        print("\nItem: ",key, ":", inspectionsDict[key], end =" ")
+
+
+
 # Defining variables to access API
 base_url = "https://api.d4h.org/v2"
 team  = "team"
@@ -103,14 +121,7 @@ else:
     print("Not Authorised")
 
 
-inspectionsDict = extractInspectionClasses()
-
-
-def listInspectionClasses(inspectionsDict):
-    print("List of inspection classes:")
-    for key in inspectionsDict.keys():
-        targetEnding = "/inspections/"+str(key)+"/items"
-        print("\nItem: ",key, ":", inspectionsDict[key], end =" ")
+#inspectionsDict = extractInspectionClasses()
 
 
 #listInspectionClasses(inspectionsDict)
