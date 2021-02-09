@@ -42,6 +42,7 @@ def introMenuFormat():
     print("---------")
     print("1) View Available Inspection Classes")
     print("2) Select an Inspection")
+    print("3) View an Item")
     print("Q) Exit\n")
 
 
@@ -66,6 +67,19 @@ def menu():
                 #print(response.status_code)
                 print("Contents: ")
                 print(json.dumps(response['data'], indent=4))
+            except:
+                return
+
+        elif choice == "3":
+            try:
+                itemID = input("\nItem ID: ").lower()
+                targetEnding = "/inspections?equipment_id="+str(itemID)
+
+                response = queryAPI(targetEnding)
+                #print(response.status_code)
+                print("Contents: ")
+                print(json.dumps(response['data'], indent=4))
+
             except:
                 return
 
@@ -99,6 +113,15 @@ def listInspectionClasses(inspectionsDict):
     for key in inspectionsDict.keys():
         targetEnding = "/inspections/"+str(key)+"/items"
         print("\nItem: ",key, ":", inspectionsDict[key], end =" ")
+
+'''
+def retrieveItem(itemID):
+    print("Item retrieved:")
+    targetEnding = "/equipment/"+itemID
+    equipmentTarget = url+targetEnding
+    return dataExtract(equipmentTarget)
+'''
+
 
 
 
